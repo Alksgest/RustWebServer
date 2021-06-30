@@ -1,5 +1,6 @@
 use crate::multithreading::thread_pool::ThreadPool;
 use crate::server::api_settings::ApiSettings;
+use crate::server::response_wrapper::response_wrapper::success;
 
 // use std::fs;
 use std::io::prelude::*;
@@ -47,18 +48,6 @@ impl ApiServer<'_> {
         }
     }
 
-    pub fn register_middleware(&self) -> &Self {
-        self
-    }
-
-    pub fn register_controller(&self) -> &Self {
-        self
-    }
-
-    pub fn register_endpoint(&self) -> &Self {
-        self
-    }
-
     fn handle_connection(&self, mut stream: TcpStream) {
         let mut buffer = vec![0; self.settings.buffer_size];
         match stream.read(&mut buffer) {
@@ -76,18 +65,25 @@ impl ApiServer<'_> {
         let test_get = b"GET /test HTTP/1.1\r\n";
 
         if buffer.starts_with(test_get) {
-            let status_line = "HTTP/1.1 200 OK";
-            let content = "Test string";
-            let response = format!(
-                "{}\r\nContent-Length: {}\r\n\r\n{}",
-                status_line,
-                content.len(),
-                content
-            );
+            let response = success(Option::from("test_content".to_string()));
+
+            println!("{}", response);
 
             stream.write(response.as_bytes()).unwrap();
             stream.flush().unwrap();
         }
+    }
+
+    pub fn register_middleware(&self) -> &Self {
+        self
+    }
+
+    pub fn register_controller(&self) -> &Self {
+        self
+    }
+
+    pub fn register_endpoint(&self) -> &Self {
+        self
     }
 }
 
