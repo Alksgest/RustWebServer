@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+// For now we cannot read content of request
 pub struct UriParser {}
 
 #[derive(Debug)]
