@@ -1,13 +1,11 @@
-use mongodb::results::InsertManyResult;
-use mongodb::results::InsertOneResult;
-use mongodb::sync::Client;
-use mongodb::sync::Collection;
-use mongodb::sync::Database;
+use mongodb::bson::oid::ObjectId;
+use mongodb::results::{InsertManyResult, InsertOneResult};
+use mongodb::sync::{Client, Collection, Database};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::marker::PhantomData;
 
-use mongodb::bson::{doc, Document};
+use mongodb::bson::doc;
 
 pub trait MongoModel: Serialize + Unpin + DeserializeOwned {
     fn get_id(&self) -> String;
@@ -41,7 +39,7 @@ where
     T: MongoModel,
 {
     // "mongodb://localhost:27017", mydb, users
-    pub fn new<S: AsRef<str>>(mongo_host: S, collection_db: S, collection_name: S) -> Self {
+    pub fn new(mongo_host: &str, collection_db: &str, collection_name: &str) -> Self {
         let client: Client = Client::with_uri_str(mongo_host).unwrap();
         let database: Database = client.database(collection_db.as_ref());
         let collection = database.collection::<T>(collection_name.as_ref());
@@ -60,7 +58,10 @@ where
     T: Serialize + Unpin + DeserializeOwned + MongoModel,
 {
     fn get(&self, id: std::string::String) -> Option<T> {
-        match self.collection.find_one(doc! {"id": id}, None) {
+        match self
+            .collection
+            .find_one(doc! {"_id": ObjectId::parse_str(id).unwrap()}, None)
+        {
             Ok(val) => val,
             Err(_) => None,
         }

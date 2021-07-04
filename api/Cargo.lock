@@ -17,6 +17,7 @@ dependencies = [
 name = "api"
 version = "0.1.0"
 dependencies = [
+ "domain",
  "lazy_static",
  "serde",
  "server_lib",
@@ -384,6 +385,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
 dependencies = [
  "generic-array",
+]
+
+[[package]]
+name = "domain"
+version = "0.1.0"
+dependencies = [
+ "mongodb",
+ "serde",
+ "server_lib",
 ]
 
 [[package]]

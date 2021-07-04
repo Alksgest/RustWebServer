@@ -33,6 +33,10 @@ impl ParsedUri {
     pub fn rest_method(&self) -> String {
         self.rest_method.clone()
     }
+
+    pub fn query_params(&self) -> HashMap<String, Option<String>> {
+        self.query_params.clone()
+    }
 }
 
 impl Clone for ParsedUri {

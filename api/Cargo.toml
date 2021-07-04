@@ -6,5 +6,6 @@ edition = "2018"
 
 [dependencies]
 server_lib = { path="../server_lib" }
+domain = { path="../domain" }
 lazy_static = "1.4.0"
 serde = { version = "1.0", features = ["derive"] }
