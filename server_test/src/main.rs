@@ -1,5 +1,4 @@
 extern crate lazy_static;
-extern crate mut_static;
 extern crate server_lib;
 
 use server_lib::server::api_server::ApiServer;

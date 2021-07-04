@@ -71,10 +71,9 @@ impl ApiServer {
         }
         // self.process_middleware();
         self.process_contorollers(&buffer, &stream);
-        // ApiServer::test_handler(&buffer, stream);
     }
 
-    async fn process_contorollers(&self, buffer: &Vec<u8>, mut stream: &TcpStream) {
+    fn process_contorollers(&self, buffer: &Vec<u8>, mut stream: &TcpStream) {
         let headers = buffer.lines();
         let header: Vec<_> = headers.take(1).collect();
         let header = match header.get(0) {
