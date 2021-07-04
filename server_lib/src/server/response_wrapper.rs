@@ -33,6 +33,10 @@ pub mod response_wrapper {
         create_response("404 Not Found", content)
     }
 
+    pub fn method_not_allowed(content: Option<String>) -> String {
+        create_response("405 Method Not Allowed", content)
+    }
+
     pub fn internal_server_error(content: Option<String>) -> String {
         create_response("500 Internal Server Error", content)
     }

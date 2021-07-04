@@ -8,3 +8,9 @@ edition = "2018"
 [dependencies]
 server_lib = { path="../server_lib" }
 lazy_static = "1.4.0"
+mut_static = "5.0.0"
+futures = "0.3"
+
+[dependencies.async-std]
+version = "1.9.0"
+features = ["attributes"]
