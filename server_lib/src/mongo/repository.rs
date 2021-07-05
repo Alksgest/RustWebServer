@@ -59,12 +59,22 @@ where
     T: Serialize + Unpin + DeserializeOwned + MongoModel,
 {
     fn get(&self, id: std::string::String) -> Option<T> {
+        let id = match ObjectId::parse_str(id) {
+            Ok(val) => Some(val),
+            Err(err) => {
+                println!("Error while parsing id! {:?}", err);
+                Some(ObjectId::new())
+            }
+        };
         match self
             .collection
-            .find_one(doc! {"_id": ObjectId::parse_str(id).unwrap()}, None)
+            .find_one(doc! {"_id": id.unwrap()}, None)
         {
             Ok(val) => val,
-            Err(_) => None,
+            Err(err) => {
+                println!("Error while getting element! {:?}", err);
+                None
+            },
         }
     }
     fn get_by_ids(&self, ids: &std::vec::Vec<std::string::String>) -> std::vec::Vec<T> {
