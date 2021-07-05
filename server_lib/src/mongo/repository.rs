@@ -1,5 +1,6 @@
 use mongodb::bson::oid::ObjectId;
 use mongodb::results::{InsertManyResult, InsertOneResult};
+use mongodb::sync::Cursor;
 use mongodb::sync::{Client, Collection, Database};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -17,7 +18,7 @@ where
 {
     fn get(&self, id: String) -> Option<T>;
     fn get_by_ids(&self, ids: &Vec<String>) -> Vec<T>;
-    fn list(&self) -> Vec<T>;
+    fn list(&self) -> Option<std::vec::Vec<T>>;
     fn create(&self, value: &T) -> bool;
     fn create_many(&self, values: Vec<T>) -> bool;
     fn update(&self, value: &T) -> bool;
@@ -69,8 +70,20 @@ where
     fn get_by_ids(&self, ids: &std::vec::Vec<std::string::String>) -> std::vec::Vec<T> {
         todo!()
     }
-    fn list(&self) -> std::vec::Vec<T> {
-        todo!()
+    fn list(&self) -> Option<std::vec::Vec<T>> {
+        let mut vec = Vec::new();
+        match self.collection.find(None, None) {
+            Ok(cursor) => {
+                for doc in cursor {
+                    match doc {
+                        Ok(doc) => vec.push(doc),
+                        Err(err) => println!("{:?}", err),
+                    }
+                }              
+            }
+            Err(_) => (),
+        }
+        Some(vec)
     }
     fn create(&self, value: &T) -> bool {
         let res: InsertOneResult = self.collection.insert_one(value, None).unwrap();

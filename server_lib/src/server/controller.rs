@@ -17,5 +17,5 @@ pub trait ControllerBase {
     fn delete(&self, opt: &Option<ParsedUri>) -> String {
         format!("{:?}", opt)
     }
-    fn rout(&self) -> String;
+    fn route(&self) -> String;
 }

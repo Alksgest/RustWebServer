@@ -92,15 +92,17 @@ impl ApiServer {
         let controller = self
             .controllers
             .iter()
-            .find(|el| el.rout() == parsed_uri.route());
+            .find(move |el| {
+                let uri_route = &parsed_uri.route();
+                let route = el.route();
+                let slice: &str = route.as_ref();
+                uri_route.starts_with(slice)
+            });
         let response = match controller {
             Some(val) => {
                 let parsed_uri_option = Option::from(parsed_uri.clone());
                 let response = match parsed_uri.rest_method().as_ref() {
-                    "GET" => {
-                        // println!("processing get request for url: {}", parsed_uri.route());
-                        val.get(&parsed_uri_option)
-                    }
+                    "GET" => val.get(&parsed_uri_option),
                     "POST" => val.post(&parsed_uri_option),
                     "PUT" => val.put(&parsed_uri_option),
                     "UPDATE" => val.update(&parsed_uri_option),
