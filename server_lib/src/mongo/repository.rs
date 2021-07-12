@@ -1,14 +1,12 @@
 use mongodb::error::Error;
-use mongodb::options::UpdateModifications;
-use mongodb::options::UpdateOptions;
-use mongodb::options::{FindOneOptions, FindOptions};
+use mongodb::options::{FindOneOptions, FindOptions, UpdateModifications, UpdateOptions};
+use mongodb::results::InsertManyResult;
 use mongodb::results::UpdateResult;
-use mongodb::results::{InsertManyResult, InsertOneResult};
 use mongodb::sync::{Client, Collection, Database};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use mongodb::bson::{doc, document::Document};
+use mongodb::bson::{doc, document::Document, Bson};
 
 pub trait MongoModel: Serialize + Unpin + DeserializeOwned {
     fn get_id(&self) -> String;
@@ -102,19 +100,26 @@ where
         }
     }
     fn create(&self, value: &T) -> String {
-        let res: InsertOneResult = self.collection.insert_one(value, None).unwrap();
-        let id = res.inserted_id.as_str();
+        let res = self.collection.insert_one(value, None);
+        let res = match res {
+            Ok(val) => Some(val),
+            Err(err) => {
+                println!("Error while creating model: {:?}", err);
+                None
+            }
+        };
+        let res = res.unwrap();
+        let id = res
+            .inserted_id
+            .as_str()
+            .unwrap_or("Object has been created but id is corrupted");
         println!("{:?}", id);
-
-        id.unwrap().to_string()
+        String::from(id)
     }
     fn create_many(&self, values: std::vec::Vec<T>) -> bool {
         let res: InsertManyResult = self.collection.insert_many(values, None).unwrap();
         let ids = res.inserted_ids;
         println!("{:?}", ids);
-        // match self.collection.insert_many(values, None) {
-        //     Ok(val) => println!("{:?}", val),
-        //     Err(err) => println!("Error!")
         true
     }
     fn update(
@@ -125,7 +130,6 @@ where
     ) -> Result<UpdateResult, Error> {
         self.collection.update_one(query, update, options)
     }
-    
     fn delete(&self, id: std::string::String) -> bool {
         match self.collection.delete_one(doc! {"id": id}, None) {
             Ok(val) => {

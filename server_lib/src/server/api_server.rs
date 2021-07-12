@@ -3,7 +3,7 @@ use crate::server::api_settings::ApiSettings;
 use crate::server::controller::ControllerBase;
 use crate::server::response_wrapper::response_wrapper::bad_request;
 use crate::server::response_wrapper::response_wrapper::method_not_allowed;
-use crate::server::uri_parser::UriParser;
+use crate::server::request_parser::RequestParser;
 use std::io::prelude::*;
 use std::net::TcpListener;
 use std::net::TcpStream;
@@ -70,20 +70,7 @@ impl ApiServer {
     }
 
     fn process_contorollers(&self, buffer: &Vec<u8>, mut stream: &TcpStream) {
-        let headers = buffer.lines();
-        let header: Vec<_> = headers.take(1).collect();
-        let header = match header.get(0) {
-            Some(val) => val,
-            None => {
-                println!("There are no headers in request?");
-                return;
-            }
-        };
-        let header = header.as_ref().unwrap();
-
-        let parsed_uri = &UriParser::parse_header(header.to_string());
-
-        println!("{:?}", parsed_uri);
+        let parsed_uri = &RequestParser::parse(buffer);
 
         let controller = self.controllers.iter().find(move |el| {
             let uri_route = &parsed_uri.route();
@@ -106,7 +93,6 @@ impl ApiServer {
             }
             _ => bad_request(None),
         };
-        println!("\n{}\n", response);
 
         stream.write(response.as_bytes()).unwrap();
         stream.flush().unwrap();

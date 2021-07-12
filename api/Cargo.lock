@@ -20,6 +20,7 @@ dependencies = [
  "domain",
  "lazy_static",
  "serde",
+ "serde_json",
  "server_lib",
 ]
 
@@ -1239,6 +1240,7 @@ version = "0.1.0"
 dependencies = [
  "mongodb",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

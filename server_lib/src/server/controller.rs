@@ -1,20 +1,10 @@
-use crate::server::uri_parser::ParsedUri;
+use crate::server::request_parser::ParsedRequest;
 
 pub trait ControllerBase {
-    fn get(&self, opt: &Option<ParsedUri>) -> String {
-        format!("{:?}", opt)
-    }
-    fn post(&self, opt: &Option<ParsedUri>) -> String {
-        format!("{:?}", opt)
-    }
-    fn put(&self, opt: &Option<ParsedUri>) -> String {
-        format!("{:?}", opt)
-    }
-    fn update(&self, opt: &Option<ParsedUri>) -> String {
-        format!("{:?}", opt)
-    }
-    fn delete(&self, opt: &Option<ParsedUri>) -> String {
-        format!("{:?}", opt)
-    }
+    fn get(&self, opt: &Option<ParsedRequest>) -> String;
+    fn post(&self, opt: &Option<ParsedRequest>) -> String;
+    fn put(&self, opt: &Option<ParsedRequest>) -> String;
+    fn update(&self, opt: &Option<ParsedRequest>) -> String;
+    fn delete(&self, opt: &Option<ParsedRequest>) -> String;
     fn route(&self) -> String;
 }
