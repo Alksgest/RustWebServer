@@ -1,6 +1,5 @@
 use crate::server::uri_parser::ParsedUri;
 
-#[allow(dead_code)]
 pub trait ControllerBase {
     fn get(&self, opt: &Option<ParsedUri>) -> String {
         format!("{:?}", opt)

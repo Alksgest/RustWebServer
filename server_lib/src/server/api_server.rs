@@ -1,28 +1,25 @@
-// use crate::multithreading::thread_pool::ThreadPool;
+use crate::multithreading::thread_pool::ThreadPool;
 use crate::server::api_settings::ApiSettings;
 use crate::server::controller::ControllerBase;
 use crate::server::response_wrapper::response_wrapper::bad_request;
 use crate::server::response_wrapper::response_wrapper::method_not_allowed;
 use crate::server::uri_parser::UriParser;
-// use core::ops::Deref;
-// use std::ops::DerefMut;
 use std::io::prelude::*;
-// use std::marker::PhantomData;
 use std::net::TcpListener;
 use std::net::TcpStream;
 
 pub struct ApiServer {
     listener: TcpListener,
-    // thread_pool: ThreadPool,
+    thread_pool: ThreadPool,
     settings: ApiSettings,
 
     controllers: Vec<Box<dyn ControllerBase>>,
-    // phantom: PhantomData<&'a u8>,
 }
 
+unsafe impl Sync for ApiServer {}
+
 impl ApiServer {
-    // -> ApiServer<'static>
-    pub fn new(settings: ApiSettings) -> ApiServer {
+    pub fn new(settings: ApiSettings, controllers: Vec<Box<dyn ControllerBase>>) -> ApiServer {
         let url = settings.create_url();
 
         let listener = match TcpListener::bind(&url) {
@@ -35,18 +32,18 @@ impl ApiServer {
             }
         };
 
-        // let thread_pool = ThreadPool::new(4);
+        let thread_pool = ThreadPool::new(4);
         ApiServer {
             listener,
             settings,
-            // thread_pool,
+            thread_pool,
             // phantom: PhantomData,
-            controllers: vec![],
+            controllers,
         }
     }
 
     // &'static self
-    pub fn start(&self) {
+    pub fn start(&'static self) {
         for stream in self.listener.incoming() {
             let stream = match stream {
                 Ok(val) => val,
@@ -55,10 +52,9 @@ impl ApiServer {
                     continue;
                 }
             };
-            self.handle_connection(stream);
-            // self.thread_pool.execute(move || {
-            //     self.handle_connection(stream);
-            // });
+            self.thread_pool.execute(move || {
+                self.handle_connection(stream);
+            });
         }
     }
 
@@ -89,15 +85,12 @@ impl ApiServer {
 
         println!("{:?}", parsed_uri);
 
-        let controller = self
-            .controllers
-            .iter()
-            .find(move |el| {
-                let uri_route = &parsed_uri.route();
-                let route = el.route();
-                let slice: &str = route.as_ref();
-                uri_route.starts_with(slice)
-            });
+        let controller = self.controllers.iter().find(move |el| {
+            let uri_route = &parsed_uri.route();
+            let route = el.route();
+            let slice: &str = route.as_ref();
+            uri_route.starts_with(slice)
+        });
         let response = match controller {
             Some(val) => {
                 let parsed_uri_option = Option::from(parsed_uri.clone());
@@ -117,19 +110,6 @@ impl ApiServer {
 
         stream.write(response.as_bytes()).unwrap();
         stream.flush().unwrap();
-    }
-
-    pub fn register_middleware(&self) -> &Self {
-        self
-    }
-
-    pub fn register_controller(&mut self, controller: Box<dyn ControllerBase>) -> &Self {
-        self.controllers.push(controller);
-        self
-    }
-
-    pub fn register_endpoint(&self) -> &Self {
-        self
     }
 
     fn is_fave_icon(buffer: &Vec<u8>) -> bool {

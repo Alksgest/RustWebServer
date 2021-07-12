@@ -1,6 +1,5 @@
 use mongodb::bson::oid::ObjectId;
 use mongodb::results::{InsertManyResult, InsertOneResult};
-use mongodb::sync::Cursor;
 use mongodb::sync::{Client, Collection, Database};
 use serde::de::DeserializeOwned;
 use serde::Serialize;

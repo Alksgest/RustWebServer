@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct ApiSettings {
     pub adress: String,
     pub port: String,
