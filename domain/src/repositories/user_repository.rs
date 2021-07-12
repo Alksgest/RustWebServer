@@ -4,13 +4,13 @@ use mongodb::bson::oid::ObjectId;
 use server_lib::mongo::repository::GenericRepository;
 use server_lib::mongo::repository::Repository;
 
-pub struct UserRepository<'a> {
-    repo: GenericRepository<'a, User>,
+pub struct UserRepository {
+    repo: GenericRepository<User>,
 }
 
-impl<'a> UserRepository<'a> {
+impl UserRepository {
     pub fn new(mongo_host: &str, collection_db: &str, collection_name: &str) -> Self {
-        let repo: GenericRepository<'a, User> =
+        let repo: GenericRepository<User> =
             GenericRepository::new(mongo_host, collection_db, collection_name);
         UserRepository { repo }
     }

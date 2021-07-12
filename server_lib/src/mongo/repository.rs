@@ -1,9 +1,12 @@
+use mongodb::error::Error;
+use mongodb::options::UpdateModifications;
+use mongodb::options::UpdateOptions;
 use mongodb::options::{FindOneOptions, FindOptions};
+use mongodb::results::UpdateResult;
 use mongodb::results::{InsertManyResult, InsertOneResult};
 use mongodb::sync::{Client, Collection, Database};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use std::marker::PhantomData;
 
 use mongodb::bson::{doc, document::Document};
 
@@ -11,7 +14,7 @@ pub trait MongoModel: Serialize + Unpin + DeserializeOwned {
     fn get_id(&self) -> String;
 }
 
-pub trait Repository<'a, T>
+pub trait Repository<T>
 where
     T: Serialize + Unpin + DeserializeOwned + MongoModel,
 {
@@ -27,21 +30,24 @@ where
     ) -> Option<std::vec::Vec<T>>;
     fn create(&self, value: &T) -> String;
     fn create_many(&self, values: Vec<T>) -> bool;
-    fn update(&self, value: &T) -> bool;
+    fn update(
+        &self,
+        query: Document,
+        update: impl Into<UpdateModifications>,
+        options: impl Into<Option<UpdateOptions>>,
+    ) -> Result<UpdateResult, Error>;
     fn delete(&self, id: String) -> bool;
 }
 
-pub struct GenericRepository<'a, T>
+pub struct GenericRepository<T>
 where
     T: MongoModel,
 {
-    // client: Client,
-    // database: Database,
     collection: Collection<T>,
-    phantom: PhantomData<&'a T>,
+    // phantom: PhantomData<&'a T>,
 }
 
-impl<'a, T> GenericRepository<'a, T>
+impl<T> GenericRepository<T>
 where
     T: MongoModel,
 {
@@ -52,15 +58,13 @@ where
         let collection = database.collection::<T>(collection_name.as_ref());
 
         GenericRepository {
-            // client,
-            // database,
             collection,
-            phantom: PhantomData,
+            // phantom: PhantomData,
         }
     }
 }
 
-impl<'a, T> Repository<'a, T> for GenericRepository<'a, T>
+impl<T> Repository<T> for GenericRepository<T>
 where
     T: Serialize + Unpin + DeserializeOwned + MongoModel,
 {
@@ -113,10 +117,15 @@ where
         //     Err(err) => println!("Error!")
         true
     }
-    fn update(&self, value: &T) -> bool {
-        // self.client.update_one()
-        true
+    fn update(
+        &self,
+        query: Document,
+        update: impl Into<UpdateModifications>,
+        options: impl Into<Option<UpdateOptions>>,
+    ) -> Result<UpdateResult, Error> {
+        self.collection.update_one(query, update, options)
     }
+    
     fn delete(&self, id: std::string::String) -> bool {
         match self.collection.delete_one(doc! {"id": id}, None) {
             Ok(val) => {

@@ -6,15 +6,15 @@ use server_lib::server::response_wrapper::response_wrapper::not_found;
 use server_lib::server::response_wrapper::response_wrapper::success;
 use server_lib::server::uri_parser::ParsedUri;
 
-pub struct UserController<'a> {
-    repo: UserRepository<'a>,
+pub struct UserController {
+    repo: UserRepository,
 }
 
-impl<'a> UserController<'a> {
+impl<'a> UserController {
     const ROUTE: &'a str = "/user";
 
     pub fn new(mongo_host: &str, collection_db: &str, collection_name: &str) -> Self {
-        let repo: UserRepository<'a> =
+        let repo: UserRepository =
             UserRepository::new(mongo_host, collection_db, collection_name);
         UserController { repo }
     }
@@ -55,7 +55,7 @@ impl<'a> UserController<'a> {
     }
 }
 
-impl<'a> ControllerBase for UserController<'_> {
+impl<'a> ControllerBase for UserController {
     fn route(&self) -> std::string::String {
         UserController::ROUTE.to_string()
     }
