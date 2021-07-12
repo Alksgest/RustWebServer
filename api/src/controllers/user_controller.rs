@@ -1,6 +1,5 @@
 use domain::models::user::User;
 use domain::repositories::user_repository::UserRepository;
-use server_lib::mongo::repository::GenericRepository;
 use server_lib::server::controller::ControllerBase;
 use server_lib::server::response_wrapper::response_wrapper::method_not_allowed;
 use server_lib::server::response_wrapper::response_wrapper::not_found;
@@ -12,7 +11,7 @@ pub struct UserController<'a> {
 }
 
 impl<'a> UserController<'a> {
-    const ROUTE: &'a str = "/test";
+    const ROUTE: &'a str = "/user";
 
     pub fn new(mongo_host: &str, collection_db: &str, collection_name: &str) -> Self {
         let repo: UserRepository<'a> =
