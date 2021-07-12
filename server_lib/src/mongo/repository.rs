@@ -1,11 +1,11 @@
-use mongodb::bson::oid::ObjectId;
+use mongodb::options::{FindOneOptions, FindOptions};
 use mongodb::results::{InsertManyResult, InsertOneResult};
 use mongodb::sync::{Client, Collection, Database};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::marker::PhantomData;
 
-use mongodb::bson::doc;
+use mongodb::bson::{doc, document::Document};
 
 pub trait MongoModel: Serialize + Unpin + DeserializeOwned {
     fn get_id(&self) -> String;
@@ -15,10 +15,17 @@ pub trait Repository<'a, T>
 where
     T: Serialize + Unpin + DeserializeOwned + MongoModel,
 {
-    fn get(&self, id: String) -> Option<T>;
-    fn get_by_ids(&self, ids: &Vec<String>) -> Vec<T>;
-    fn list(&self) -> Option<std::vec::Vec<T>>;
-    fn create(&self, value: &T) -> bool;
+    fn get(
+        &self,
+        filter: impl Into<Option<Document>>,
+        option: impl Into<Option<FindOneOptions>>,
+    ) -> Option<T>;
+    fn list(
+        &self,
+        filter: impl Into<Option<Document>>,
+        options: impl Into<Option<FindOptions>>,
+    ) -> Option<std::vec::Vec<T>>;
+    fn create(&self, value: &T) -> String;
     fn create_many(&self, values: Vec<T>) -> bool;
     fn update(&self, value: &T) -> bool;
     fn delete(&self, id: String) -> bool;
@@ -57,49 +64,45 @@ impl<'a, T> Repository<'a, T> for GenericRepository<'a, T>
 where
     T: Serialize + Unpin + DeserializeOwned + MongoModel,
 {
-    fn get(&self, id: std::string::String) -> Option<T> {
-        let id = match ObjectId::parse_str(id) {
-            Ok(val) => Some(val),
-            Err(err) => {
-                println!("Error while parsing id! {:?}", err);
-                Some(ObjectId::new())
-            }
-        };
-        match self
-            .collection
-            .find_one(doc! {"_id": id.unwrap()}, None)
-        {
+    fn get(
+        &self,
+        filter: impl Into<Option<Document>>,
+        options: impl Into<Option<FindOneOptions>>,
+    ) -> Option<T> {
+        match self.collection.find_one(filter, options) {
             Ok(val) => val,
             Err(err) => {
                 println!("Error while getting element! {:?}", err);
                 None
-            },
+            }
         }
     }
-    fn get_by_ids(&self, ids: &std::vec::Vec<std::string::String>) -> std::vec::Vec<T> {
-        todo!()
-    }
-    fn list(&self) -> Option<std::vec::Vec<T>> {
-        let mut vec = Vec::new();
-        match self.collection.find(None, None) {
+
+    fn list(
+        &self,
+        filter: impl Into<Option<Document>>,
+        options: impl Into<Option<FindOptions>>,
+    ) -> Option<std::vec::Vec<T>> {
+        match self.collection.find(filter, options) {
             Ok(cursor) => {
+                let mut vec = Vec::new();
                 for doc in cursor {
                     match doc {
                         Ok(doc) => vec.push(doc),
                         Err(err) => println!("{:?}", err),
                     }
-                }              
+                }
+                Some(vec)
             }
-            Err(_) => (),
+            Err(_) => None,
         }
-        Some(vec)
     }
-    fn create(&self, value: &T) -> bool {
+    fn create(&self, value: &T) -> String {
         let res: InsertOneResult = self.collection.insert_one(value, None).unwrap();
-        let id = res.inserted_id;
+        let id = res.inserted_id.as_str();
         println!("{:?}", id);
 
-        true
+        id.unwrap().to_string()
     }
     fn create_many(&self, values: std::vec::Vec<T>) -> bool {
         let res: InsertManyResult = self.collection.insert_many(values, None).unwrap();

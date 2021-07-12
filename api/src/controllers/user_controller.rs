@@ -1,5 +1,5 @@
-use crate::server_lib::mongo::repository::Repository;
-use domain::models::User;
+use domain::models::user::User;
+use domain::repositories::user_repository::UserRepository;
 use server_lib::mongo::repository::GenericRepository;
 use server_lib::server::controller::ControllerBase;
 use server_lib::server::response_wrapper::response_wrapper::method_not_allowed;
@@ -8,15 +8,15 @@ use server_lib::server::response_wrapper::response_wrapper::success;
 use server_lib::server::uri_parser::ParsedUri;
 
 pub struct UserController<'a> {
-    repo: GenericRepository<'a, User>,
+    repo: UserRepository<'a>,
 }
 
 impl<'a> UserController<'a> {
     const ROUTE: &'a str = "/test";
 
     pub fn new(mongo_host: &str, collection_db: &str, collection_name: &str) -> Self {
-        let repo: GenericRepository<'a, User> =
-            GenericRepository::new(mongo_host, collection_db, collection_name);
+        let repo: UserRepository<'a> =
+            UserRepository::new(mongo_host, collection_db, collection_name);
         UserController { repo }
     }
 
@@ -26,7 +26,7 @@ impl<'a> UserController<'a> {
         match params.get("id") {
             Some(val) => {
                 let id = val.as_ref().unwrap().to_string();
-                let response = match self.repo.get(id.clone()) {
+                let response = match self.repo.get_by_id(id.clone()) {
                     Some(user) => success(Option::from(format!("got user: {:?}", user))),
                     None => not_found(Option::from(format!("There are no user with id: {}", id))),
                 };
@@ -41,7 +41,7 @@ impl<'a> UserController<'a> {
         let vec: Vec<&str> = route.split("/").collect();
         let id = vec[vec.len() - 1];
 
-        let response = match self.repo.get(id.to_string()) {
+        let response = match self.repo.get_by_id(id.to_string()) {
             Some(user) => success(Option::from(format!("got user: {:?}", user))),
             None => not_found(Option::from(format!("There are no user with id: {}", id))),
         };
@@ -49,11 +49,10 @@ impl<'a> UserController<'a> {
     }
 
     fn handle_get_route(&self) -> String {
-        let response = match self.repo.list() {
+        match self.repo.get_list() {
             Some(users) => success(Option::from(format!("got users: {:?}", users))),
             None => not_found(Option::from(format!("There are no users"))),
-        };
-        response
+        }
     }
 }
 
@@ -84,8 +83,8 @@ impl<'a> ControllerBase for UserController<'_> {
         let name = params.get("name").unwrap().clone();
         let user: User = User::new(name.unwrap(), 15);
 
-        let is_created = self.repo.create(&user);
+        let id = self.repo.create(&user);
 
-        format!("user: {:?}\nresult: {}", user, is_created)
+        format!("user: {:?}\nresult: {}", user, id)
     }
 }
