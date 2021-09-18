@@ -37,7 +37,6 @@ impl ApiServer {
             listener,
             settings,
             thread_pool,
-            // phantom: PhantomData,
             controllers,
         }
     }
